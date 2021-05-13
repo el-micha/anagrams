@@ -48,21 +48,23 @@ allCodes :: [(Code, [String])] -> [Code]
 allCodes ts = unique $ map fst ts
 
 -- find all with given code
-findByCode :: Code -> [(Code, [String])] -> [(Code, [String])]
-findByCode c = filter (\t -> fst t == c)
+findByCode' :: Code -> [(Code, [String])] -> [(Code, [String])]
+findByCode' c = filter (\t -> fst t == c)
 
 -- find only the ones with disjoint wordlists...
-findByCode' c = go [] xs 
-  where go acc [] = acc
+findByCode :: Code -> [(Code, [String])] -> [[String]]
+findByCode c zs = go [] zs
+  where go :: [[String]] -> [(Code, [String])] -> [[String]]
+        go acc [] = acc
         go acc (x:xs) 
-          | fst x == c && disjoint (snd x) acc = go (x:acc) xs
+          | fst x == c && disjoint (snd x) acc = go ((snd x):acc) xs
           | otherwise                           = go acc xs
 
-disjoint :: [a] -> [[a]] -> Bool
+disjoint :: Eq a => [a] -> [[a]] -> Bool
 disjoint xs ys = all (\y -> all (\x -> notin x y) xs) ys
 
-notin :: a -> [a] -> Bool
-notin = not elem
+notin :: Eq a => a -> [a] -> Bool
+notin x xs = not $ elem x xs
 
 findAnagrams words = [findByCode code tagged| code <- uniqueCodes] 
   where tagged = taggedSublists words
@@ -70,7 +72,7 @@ findAnagrams words = [findByCode code tagged| code <- uniqueCodes]
 
 onlyAnas words = filter (\x -> length x > 1) (findAnagrams words)
 
-onlyWords words = map (\xs -> map snd xs) (onlyAnas words)
+--onlyWords words = map (\xs -> map snd xs) (onlyAnas words)
 
 
 findanas words = [filter (\tup -> code == fst tup && sublist /= snd tup) tagged| (code, sublist) <- tagged]
